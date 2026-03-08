@@ -238,7 +238,7 @@ data = load_data(city_name, query_date, birth_nak)
 # Banner
 # -------------------------------------------------------------------
 
-st.image("images/tara_veda_log.png", use_container_width=True)
+st.image("images/tara_veda_logo.png", use_container_width=True)
 
 # -------------------------------------------------------------------
 # Title row
