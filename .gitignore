@@ -1,0 +1,22 @@
+# Old large databases (200-year range)
+*_1926_2125.sqlite
+*_1926_2125.csv
+
+# Dev/debug scripts
+check_amrita.py
+
+# All CSV exports (not needed by app)
+*.csv
+
+# Temp files created by editor
+*.tmp.*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+venv/
+.venv/
