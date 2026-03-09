@@ -197,14 +197,24 @@ def verdict_html(name: str, verdict: str, tara_index: int = None, tara_name: str
 # Page config + CSS
 # -------------------------------------------------------------------
 
-st.set_page_config(page_title="Telugu Panchangam", page_icon="🌅", layout="wide")
+st.set_page_config(page_title="Tara Veda", page_icon="🌅", layout="wide")
 
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet">
 <style>
   .block-container { padding-top: 1rem !important; padding-bottom: 0 !important; }
   h3 { margin-top: 0.4rem !important; margin-bottom: 0.2rem !important; font-size: 1rem !important; }
   hr { margin: 0.4rem 0 !important; }
   [data-testid="stSidebar"] { display: none; }
+  .text-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 2.6rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-align: center;
+      padding: 0.6rem 0 0.4rem 0;
+      color: #2c2c2c;
+  }
   .controls-bar {
       background-color: #f0f0f0;
       border-radius: 8px;
@@ -215,7 +225,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
-# Controls bar (top of page, no sidebar)
+# Text logo
+# -------------------------------------------------------------------
+
+st.markdown('<div class="text-logo">Tara Veda</div>', unsafe_allow_html=True)
+
+# -------------------------------------------------------------------
+# Controls bar
 # -------------------------------------------------------------------
 
 st.markdown('<div class="controls-bar">', unsafe_allow_html=True)
@@ -243,12 +259,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 # -------------------------------------------------------------------
 
 data = load_data(city_name, query_date, birth_nak)
-
-# -------------------------------------------------------------------
-# Banner
-# -------------------------------------------------------------------
-
-st.image("images/tara_veda_logo.png", use_container_width=True)
 
 # -------------------------------------------------------------------
 # Title row
