@@ -201,32 +201,42 @@ st.set_page_config(page_title="Telugu Panchangam", page_icon="🌅", layout="wid
 
 st.markdown("""
 <style>
-  .block-container { padding-top: 2rem !important; padding-bottom: 0 !important; }
+  .block-container { padding-top: 1rem !important; padding-bottom: 0 !important; }
   h3 { margin-top: 0.4rem !important; margin-bottom: 0.2rem !important; font-size: 1rem !important; }
   hr { margin: 0.4rem 0 !important; }
-  [data-testid="stSidebar"] { min-width: 220px; max-width: 220px; }
+  [data-testid="stSidebar"] { display: none; }
+  .controls-bar {
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      margin-bottom: 0.8rem;
+  }
 </style>
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
-# Sidebar
+# Controls bar (top of page, no sidebar)
 # -------------------------------------------------------------------
 
-with st.sidebar:
-    st.header("Settings")
+st.markdown('<div class="controls-bar">', unsafe_allow_html=True)
+c1, c2, c3 = st.columns([1, 2, 1])
+with c1:
     city_name = st.selectbox("City", list(CITY_DB.keys()), index=2)
+with c2:
     birth_nak = st.selectbox(
         "Birth Nakshatra",
         options=list(NAKSHATRA_NAMES.keys()),
         format_func=lambda n: f"{n}. {NAKSHATRA_NAMES[n]}",
         index=10,  # 11. Purva Phalguni
     )
+with c3:
     query_date = st.date_input(
         "Date",
         value=date.today(),
         min_value=date(START_YEAR, 1, 1),
         max_value=date(END_YEAR, 12, 31),
     )
+st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
 # Load data
@@ -253,13 +263,13 @@ st.caption(vedic_line)
 # Sun / Moon row  (8 compact cells in one line)
 # -------------------------------------------------------------------
 
-cols = st.columns(8)
+cols = st.columns(6)
 for col, label, key in zip(cols, [
     "Sunrise", "Sunset", "Moonrise", "Moonset",
-    "Tithi", "Yoga", "Karana", "Weekday",
+    "Tithi", "Weekday",
 ], [
     "sunrise_dt", "sunset_dt", "moonrise_dt", "moonset_dt",
-    "tithi_name", "yoga_name", "karana_name", "weekday_name",
+    "tithi_name", "weekday_name",
 ]):
     col.markdown(cell(label, fmt(data[key]) if key.endswith("_dt") else (data.get(key) or "—")), unsafe_allow_html=True)
 
@@ -304,19 +314,17 @@ st.markdown("---")
 # Inauspicious + Auspicious in one row (6 columns)
 # -------------------------------------------------------------------
 
-p1, p2, p3, p4, p5, p6 = st.columns(6)
+p1, p2, p3 = st.columns(3)
 
-p1.markdown(cell("🔴 Rahu Kalam",   time_range(data.get("rahu_start_dt"),       data.get("rahu_end_dt"))),       unsafe_allow_html=True)
-p2.markdown(cell("🔴 Yamaganda",    time_range(data.get("yamaganda_start_dt"),  data.get("yamaganda_end_dt"))),  unsafe_allow_html=True)
-p3.markdown(cell("🔴 Gulika Kalam", time_range(data.get("gulika_start_dt"),     data.get("gulika_end_dt"))),     unsafe_allow_html=True)
+p1.markdown(cell("🔴 Rahu Kalam",   time_range(data.get("rahu_start_dt"),       data.get("rahu_end_dt"))),      unsafe_allow_html=True)
+p2.markdown(cell("🔴 Yamaganda",    time_range(data.get("yamaganda_start_dt"),  data.get("yamaganda_end_dt"))), unsafe_allow_html=True)
 
 dur1 = time_range(data.get("durmuhurtham1_start_dt"), data.get("durmuhurtham1_end_dt"))
 dur2 = time_range(data.get("durmuhurtham2_start_dt"), data.get("durmuhurtham2_end_dt"))
 dur_str = dur1 if not data.get("durmuhurtham2_start_dt") else f"{dur1} | {dur2}"
-p4.markdown(cell("🔴 Durmuhurtham", dur_str), unsafe_allow_html=True)
+p3.markdown(cell("🔴 Durmuhurtham", dur_str), unsafe_allow_html=True)
 
-p5.markdown(cell("🟢 Abhijit",      time_range(data.get("abhijit_start_dt"),        data.get("abhijit_end_dt"))),                              unsafe_allow_html=True)
-p6.markdown(cell("🟢 Amrita",       time_range_aware(data.get("amrita_ghadiya_start_dt"), data.get("amrita_ghadiya_end_dt"), query_date)), unsafe_allow_html=True)
+st.markdown(cell("🟢 Amrita", time_range_aware(data.get("amrita_ghadiya_start_dt"), data.get("amrita_ghadiya_end_dt"), query_date)), unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
 # Advice (compact, only if present)
@@ -325,5 +333,4 @@ p6.markdown(cell("🟢 Amrita",       time_range_aware(data.get("amrita_ghadiya_
 advice = data.get("app_advice", [])
 if advice:
     st.markdown("---")
-    for note in advice:
-        st.warning(note, icon="⚠️")
+    st.markdown("\n".join(f"- {note}" for note in advice))
