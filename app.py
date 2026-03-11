@@ -194,6 +194,114 @@ def verdict_html(name: str, verdict: str, tara_index: int = None, tara_name: str
 
 
 # -------------------------------------------------------------------
+# Nakshatra wisdom (Feature 4 data)
+# -------------------------------------------------------------------
+
+NAKSHATRA_WISDOM = {
+    1:  {"theme": "New Beginnings & Healing",          "advice": ["Favorable for starting new ventures and travel", "Good for medical treatments and physical activity", "Move swiftly — Ashwini energy rewards quick action"]},
+    2:  {"theme": "Transformation & Discipline",        "advice": ["Good for completing tasks and taking responsibility", "Avoid hasty decisions or shortcuts", "A day for disciplined effort and long-term thinking"]},
+    3:  {"theme": "Clarity & Courage",                  "advice": ["Good day to confront challenges directly", "Favorable for cutting away what no longer serves", "Speak your truth — clarity brings results today"]},
+    4:  {"theme": "Growth & Abundance",                 "advice": ["Excellent for creative work, relationships, and planting seeds", "Favorable for financial matters and agriculture", "Nurture what matters — Rohini blesses steady growth"]},
+    5:  {"theme": "Curiosity & Exploration",            "advice": ["Good for research, travel, and new connections", "Keep an open mind — seek before concluding", "Favorable for learning and intellectual pursuits"]},
+    6:  {"theme": "Transformation Through Storm",       "advice": ["Good for letting go of the old", "Avoid major new beginnings today", "Inner transformation is possible — reflect deeply"]},
+    7:  {"theme": "Renewal & Return",                   "advice": ["Good for revisiting old projects and reconciliation", "Favorable for restoring relationships and trust", "What was lost can be regained today"]},
+    8:  {"theme": "Nourishment & Prosperity",           "advice": ["Excellent for financial matters and family decisions", "Favorable for spiritual practice and religious ceremonies", "One of the most auspicious nakshatras — plan important work today"]},
+    9:  {"theme": "Introspection & Mysticism",          "advice": ["Good for research, inner work, and independent projects", "Avoid public confrontations and unnecessary arguments", "Trust your intuition — hidden insights are accessible today"]},
+    10: {"theme": "Authority & Ancestry",               "advice": ["Good for ceremonial work and leadership decisions", "Favorable for honoring elders and family traditions", "Act with dignity — Magha rewards those with integrity"]},
+    11: {"theme": "Creativity & Enjoyment",             "advice": ["Good for leisure, relationships, and artistic pursuits", "Favorable for celebrations and social gatherings", "Enjoy the moment — Purva Phalguni blesses rest and pleasure"]},
+    12: {"theme": "Service & Stability",                "advice": ["Good for long-term commitments and contracts", "Favorable for partnerships and cooperative work", "Build for the future — steady effort brings lasting results"]},
+    13: {"theme": "Skill & Craftsmanship",              "advice": ["Excellent for detailed work, negotiations, and trade", "Favorable for hands-on tasks and technical work", "Precision matters today — take care with the details"]},
+    14: {"theme": "Artistry & Brilliance",              "advice": ["Good for creative projects, architecture, and design", "Favorable for making things beautiful and impactful", "Express yourself — Chitra rewards bold creativity"]},
+    15: {"theme": "Independence & Flexibility",         "advice": ["Good for business, trading, and independent decisions", "Avoid rigidity — adapt to what the day brings", "Swati favors those who move with the wind, not against it"]},
+    16: {"theme": "Focus & Ambition",                   "advice": ["Good for goal-setting and finishing pending work", "Favorable for intense focus and achieving targets", "Push through obstacles — Vishakha energy sustains effort"]},
+    17: {"theme": "Devotion & Friendship",              "advice": ["Good for teamwork, spiritual practice, and relationships", "Favorable for group activities and social bonding", "Loyalty is rewarded — show up for those who matter"]},
+    18: {"theme": "Seniority & Protection",             "advice": ["Good for leadership roles and protecting others", "Avoid unnecessary rivalry or competitive behavior", "Take responsibility — Jyeshtha rewards the elder mind"]},
+    19: {"theme": "Root & Investigation",               "advice": ["Good for research, uncovering truth, and deep analysis", "Avoid destruction or abrupt endings without reflection", "Go to the root cause — Mula energy reveals what is hidden"]},
+    20: {"theme": "Perseverance & Purification",        "advice": ["Good for sustained effort and water-related activities", "Favorable for cleansing, purification, and long projects", "Stay the course — Purva Ashadha rewards those who persist"]},
+    21: {"theme": "Victory & Achievement",              "advice": ["Excellent for important launches and difficult tasks", "Favorable for pushing through final obstacles", "Act boldly — Uttara Ashadha carries the energy of final victory"]},
+    22: {"theme": "Listening & Learning",               "advice": ["Good for education, spiritual learning, and communication", "Favorable for listening carefully before responding", "Knowledge gathered today can guide you for years"]},
+    23: {"theme": "Wealth & Rhythm",                    "advice": ["Good for music, property matters, and financial planning", "Favorable for celebrations and social harmony", "Dhanishtha blesses those who give generously"]},
+    24: {"theme": "Healing & Mystery",                  "advice": ["Good for medical treatment, research, and solitude", "Favorable for unconventional approaches to problems", "Look beyond the obvious — answers come from deeper sources"]},
+    25: {"theme": "Intensity & Transformation",         "advice": ["Good for spiritual work and inner transformation", "Avoid anger, impulsive speech, and conflict", "Channel intensity constructively — today's fire can forge or destroy"]},
+    26: {"theme": "Wisdom & Depth",                     "advice": ["Excellent for teaching, meditation, and long-term planning", "Favorable for philosophical reflection and writing", "Go slow and deep — Uttara Bhadrapada rewards patience"]},
+    27: {"theme": "Completion & Compassion",            "advice": ["Good for endings, new beginnings, and acts of charity", "Favorable for letting go gracefully and starting fresh", "Revati closes one cycle and opens another — honor both"]},
+}
+
+# -------------------------------------------------------------------
+# Feature helpers
+# -------------------------------------------------------------------
+
+def dt_to_min(dt_str):
+    """Convert 'YYYY-MM-DD HH:MM:SS' to minutes from midnight (same day only)."""
+    if not dt_str:
+        return None
+    parts = str(dt_str).split(" ")
+    if len(parts) == 2:
+        t = parts[1].split(":")
+        mins = int(t[0]) * 60 + int(t[1])
+        return mins if mins < 1440 else None   # ignore next-day values
+    return None
+
+
+def get_good_windows(data):
+    """Return free (start_min, end_min) windows within sunrise–sunset."""
+    day_start = dt_to_min(data.get("sunrise_dt"))
+    day_end   = dt_to_min(data.get("sunset_dt"))
+    if not day_start or not day_end:
+        return []
+    blocked = []
+    for s_key, e_key in [
+        ("rahu_start_dt",          "rahu_end_dt"),
+        ("durmuhurtham1_start_dt", "durmuhurtham1_end_dt"),
+        ("durmuhurtham2_start_dt", "durmuhurtham2_end_dt"),
+        ("varjyam1_start_dt",      "varjyam1_end_dt"),
+        ("varjyam2_start_dt",      "varjyam2_end_dt"),
+    ]:
+        s = dt_to_min(data.get(s_key))
+        e = dt_to_min(data.get(e_key))
+        if s and e and s < e:
+            blocked.append((s, e))
+    blocked.sort()
+    free, current = [], day_start
+    for bs, be in blocked:
+        if bs > current:
+            free.append((current, min(bs, day_end)))
+        current = max(current, be)
+    if current < day_end:
+        free.append((current, day_end))
+    return [(s, e) for s, e in free if e - s >= 20]
+
+
+def min_to_hhmm(m):
+    return f"{m // 60:02d}:{m % 60:02d}"
+
+
+def get_day_score(verdict):
+    return {"Very Good": 90, "Good": 70, "Not Good": 40, "Bad": 25, "Totally Bad": 10}.get(verdict or "", 50)
+
+
+def score_label(score):
+    if score >= 80: return "Excellent", "🟢"
+    if score >= 60: return "Good",      "🟡"
+    if score >= 40: return "Neutral",   "🟠"
+    return "Avoid major decisions", "🔴"
+
+
+def load_week_data(city_name, start_date, birth_nak, days=7):
+    from datetime import timedelta
+    results = []
+    for i in range(days):
+        d = start_date + timedelta(days=i)
+        if date(START_YEAR, 1, 1) <= d <= date(END_YEAR, 12, 31):
+            try:
+                row = load_data(city_name, d, birth_nak)
+                results.append((d, row))
+            except Exception:
+                pass
+    return results
+
+
+# -------------------------------------------------------------------
 # Page config + CSS
 # -------------------------------------------------------------------
 
@@ -206,6 +314,11 @@ st.markdown("""
   h3 { margin-top: 0.4rem !important; margin-bottom: 0.2rem !important; font-size: 1rem !important; }
   hr { margin: 0.4rem 0 !important; }
   [data-testid="stSidebar"] { display: none; }
+  [data-testid="stVerticalBlockBorderWrapper"] {
+      border: 1.5px solid #d0d0d0 !important;
+      border-radius: 10px !important;
+      padding: 0.5rem !important;
+  }
   .text-logo {
       font-family: 'Cinzel', serif;
       font-size: 2.6rem;
@@ -260,87 +373,152 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 data = load_data(city_name, query_date, birth_nak)
 
-# -------------------------------------------------------------------
-# Title row
-# -------------------------------------------------------------------
+# ===================================================================
+# ROW 1 — TODAY (left) + 7-DAY FORECAST (right)
+# ===================================================================
 
-st.subheader(f"{data['weekday_name']}, {query_date.strftime('%d %B %Y')} — {city_name}")
+col_today, col_forecast = st.columns(2)
 
-vedic_line = get_vedic_line(query_date, city_name, data.get("tithi_num"))
-st.caption(vedic_line)
+with col_today:
+    with st.container(border=True):
+        st.subheader(f"{data['weekday_name']}, {query_date.strftime('%d %B %Y')} — {city_name}")
+        vedic_line = get_vedic_line(query_date, city_name, data.get("tithi_num"))
+        st.caption(vedic_line)
 
-# -------------------------------------------------------------------
-# Sun / Moon row  (8 compact cells in one line)
-# -------------------------------------------------------------------
+        cols = st.columns(6)
+        for col, label, key in zip(cols, [
+            "Sunrise", "Sunset", "Moonrise", "Moonset", "Tithi", "Weekday",
+        ], [
+            "sunrise_dt", "sunset_dt", "moonrise_dt", "moonset_dt", "tithi_name", "weekday_name",
+        ]):
+            col.markdown(cell(label, fmt(data[key]) if key.endswith("_dt") else (data.get(key) or "—")), unsafe_allow_html=True)
 
-cols = st.columns(6)
-for col, label, key in zip(cols, [
-    "Sunrise", "Sunset", "Moonrise", "Moonset",
-    "Tithi", "Weekday",
-], [
-    "sunrise_dt", "sunset_dt", "moonrise_dt", "moonset_dt",
-    "tithi_name", "weekday_name",
-]):
-    col.markdown(cell(label, fmt(data[key]) if key.endswith("_dt") else (data.get(key) or "—")), unsafe_allow_html=True)
+        st.markdown("---")
 
-st.markdown("---")
+        nc1, nc2 = st.columns([2, 3])
+        with nc1:
+            st.markdown("**Nakshatra**")
+            nak_label = data.get("nakshatra_name") or "—"
+            pada = data.get("nakshatra_pada")
+            nak_str = nak_label + (f" (Pada {pada})" if pada else "")
+            nak_end = fmt(data.get("nakshatra_end_dt"))
+            st.markdown(cell("", nak_str, f"until {nak_end}"), unsafe_allow_html=True)
+            if data.get("nakshatra2_name"):
+                st.markdown(cell("", data["nakshatra2_name"], f"from {fmt(data.get('nakshatra2_start_dt'))}"), unsafe_allow_html=True)
 
-# -------------------------------------------------------------------
-# Nakshatra + Tarabala row
-# -------------------------------------------------------------------
+        with nc2:
+            st.markdown(f"**Tarabala** for {NAKSHATRA_NAMES[birth_nak]}")
+            lines = [verdict_html(
+                f"{data.get('nakshatra_name', '')}{'  (until ' + nak_end + ')' if data.get('nakshatra2_name') else ''}",
+                data.get("tara_verdict", ""), data.get("tara_index"), data.get("tara_name"),
+            )]
+            if data.get("nakshatra2_name"):
+                lines.append(verdict_html(
+                    f"{data['nakshatra2_name']}  (from {fmt(data.get('nakshatra2_start_dt'))})",
+                    data.get("tara2_verdict", ""), data.get("tara2_index"), data.get("tara2_name"),
+                ))
+            st.markdown("<br>".join(lines), unsafe_allow_html=True)
 
-nc1, nc2 = st.columns([2, 3])
+        st.markdown("---")
 
-with nc1:
-    st.markdown("**Nakshatra**")
-    nak_label = data.get("nakshatra_name") or "—"
-    pada = data.get("nakshatra_pada")
-    nak_str = f"{nak_label}" + (f" (Pada {pada})" if pada else "")
-    nak_end = fmt(data.get("nakshatra_end_dt"))
-    st.markdown(cell("", nak_str, f"until {nak_end}"), unsafe_allow_html=True)
-    if data.get("nakshatra2_name"):
-        st.markdown(cell("", data["nakshatra2_name"], f"from {fmt(data.get('nakshatra2_start_dt'))}"), unsafe_allow_html=True)
+        p1, p2, p3 = st.columns(3)
+        p1.markdown(cell("🔴 Rahu Kalam",  time_range(data.get("rahu_start_dt"),      data.get("rahu_end_dt"))),      unsafe_allow_html=True)
+        p2.markdown(cell("🔴 Yamaganda",   time_range(data.get("yamaganda_start_dt"), data.get("yamaganda_end_dt"))), unsafe_allow_html=True)
+        dur1 = time_range(data.get("durmuhurtham1_start_dt"), data.get("durmuhurtham1_end_dt"))
+        dur2 = time_range(data.get("durmuhurtham2_start_dt"), data.get("durmuhurtham2_end_dt"))
+        p3.markdown(cell("🔴 Durmuhurtham", dur1 if not data.get("durmuhurtham2_start_dt") else f"{dur1} | {dur2}"), unsafe_allow_html=True)
+        st.markdown(cell("🟢 Amrita", time_range_aware(data.get("amrita_ghadiya_start_dt"), data.get("amrita_ghadiya_end_dt"), query_date)), unsafe_allow_html=True)
 
-with nc2:
-    st.markdown(f"**Tarabala** for {NAKSHATRA_NAMES[birth_nak]}")
-    lines = [verdict_html(
-        f"{data.get('nakshatra_name', '')}{'  (until ' + nak_end + ')' if data.get('nakshatra2_name') else ''}",
-        data.get("tara_verdict", ""),
-        data.get("tara_index"),
-        data.get("tara_name"),
-    )]
-    if data.get("nakshatra2_name"):
-        lines.append(verdict_html(
-            f"{data['nakshatra2_name']}  (from {fmt(data.get('nakshatra2_start_dt'))})",
-            data.get("tara2_verdict", ""),
-            data.get("tara2_index"),
-            data.get("tara2_name"),
-        ))
-    st.markdown("<br>".join(lines), unsafe_allow_html=True)
+        advice = data.get("app_advice", [])
+        if advice:
+            st.markdown("---")
+            st.markdown("\n".join(f"- {note}" for note in advice))
 
-st.markdown("---")
+with col_forecast:
+    with st.container(border=True):
+        st.subheader("7-Day Forecast")
+        st.caption(f"Tarabala for {NAKSHATRA_NAMES[birth_nak]}")
 
-# -------------------------------------------------------------------
-# Inauspicious + Auspicious in one row (6 columns)
-# -------------------------------------------------------------------
+        week = load_week_data(city_name, query_date, birth_nak, days=7)
+        for d, row in week:
+            score = get_day_score(row.get("tara_verdict"))
+            label, icon = score_label(score)
+            nak = row.get("nakshatra_name", "—")
+            tithi = row.get("tithi_name", "—")
+            is_today = (d == query_date)
+            day_str = f"**{'Today' if is_today else d.strftime('%a %d %b')}**"
+            st.markdown(
+                f"{icon} {day_str} &nbsp; {label}<br>"
+                f"<span style='color:#888;font-size:0.82rem;margin-left:1.4rem'>{nak} · {tithi}</span>",
+                unsafe_allow_html=True,
+            )
+        st.markdown("---")
+        st.caption("🟢 Excellent &nbsp; 🟡 Good &nbsp; 🟠 Neutral &nbsp; 🔴 Avoid")
 
-p1, p2, p3 = st.columns(3)
+# ===================================================================
+# ROW 2 — ACTIVITY PLANNER (left) + DAILY WISDOM (right)
+# ===================================================================
 
-p1.markdown(cell("🔴 Rahu Kalam",   time_range(data.get("rahu_start_dt"),       data.get("rahu_end_dt"))),      unsafe_allow_html=True)
-p2.markdown(cell("🔴 Yamaganda",    time_range(data.get("yamaganda_start_dt"),  data.get("yamaganda_end_dt"))), unsafe_allow_html=True)
+col_planner, col_wisdom = st.columns(2)
 
-dur1 = time_range(data.get("durmuhurtham1_start_dt"), data.get("durmuhurtham1_end_dt"))
-dur2 = time_range(data.get("durmuhurtham2_start_dt"), data.get("durmuhurtham2_end_dt"))
-dur_str = dur1 if not data.get("durmuhurtham2_start_dt") else f"{dur1} | {dur2}"
-p3.markdown(cell("🔴 Durmuhurtham", dur_str), unsafe_allow_html=True)
+with col_planner:
+    with st.container(border=True):
+        st.subheader("Activity Planner")
+        st.caption("Avoids Rahu Kalam, Durmuhurtham, Varjyam")
 
-st.markdown(cell("🟢 Amrita", time_range_aware(data.get("amrita_ghadiya_start_dt"), data.get("amrita_ghadiya_end_dt"), query_date)), unsafe_allow_html=True)
+        st.selectbox("Select activity", [
+            "Travel", "Business Decisions", "Financial Transactions",
+            "Medical Appointments", "Important Meetings", "Starting New Projects",
+        ], key="activity_select")
 
-# -------------------------------------------------------------------
-# Advice (compact, only if present)
-# -------------------------------------------------------------------
+        windows = get_good_windows(data)
+        sunrise_min = dt_to_min(data.get("sunrise_dt"))
+        sunset_min  = dt_to_min(data.get("sunset_dt"))
+        if sunrise_min and sunset_min:
+            st.markdown(f"**Daytime:** {min_to_hhmm(sunrise_min)} – {min_to_hhmm(sunset_min)}")
 
-advice = data.get("app_advice", [])
-if advice:
-    st.markdown("---")
-    st.markdown("\n".join(f"- {note}" for note in advice))
+        if windows:
+            st.markdown("**Good windows:**")
+            for s, e in windows:
+                st.markdown(f"🟢 **{min_to_hhmm(s)} – {min_to_hhmm(e)}** · _{e - s} min_")
+        else:
+            st.warning("No clear windows today.")
+
+        st.markdown("**Avoid:**")
+        for label, sk, ek in [
+            ("Rahu Kalam",   "rahu_start_dt",         "rahu_end_dt"),
+            ("Durmuhurtham", "durmuhurtham1_start_dt", "durmuhurtham1_end_dt"),
+            ("Varjyam",      "varjyam1_start_dt",      "varjyam1_end_dt"),
+        ]:
+            if data.get(sk):
+                st.markdown(f"🔴 **{label}:** {time_range(data.get(sk), data.get(ek))}")
+        if data.get("amrita_ghadiya_start_dt"):
+            st.markdown(f"🟢 **Amrita:** {time_range_aware(data.get('amrita_ghadiya_start_dt'), data.get('amrita_ghadiya_end_dt'), query_date)}")
+
+with col_wisdom:
+    with st.container(border=True):
+        nak_num  = data.get("nakshatra_num")
+        nak_name = data.get("nakshatra_name", "—")
+        wisdom   = NAKSHATRA_WISDOM.get(nak_num)
+
+        st.subheader(f"Daily Wisdom — {nak_name}")
+        if data.get("nakshatra2_name"):
+            st.caption(f"Transitions to {data['nakshatra2_name']} at {fmt(data.get('nakshatra2_start_dt'))}")
+
+        if wisdom:
+            st.markdown(f"**Theme:** {wisdom['theme']}")
+            st.markdown("---")
+            for line in wisdom["advice"]:
+                st.markdown(f"- {line}")
+        else:
+            st.info("Wisdom not available for today's nakshatra.")
+
+        if data.get("nakshatra2_name"):
+            nak2_num = next((k for k, v in NAKSHATRA_NAMES.items() if v == data["nakshatra2_name"]), None)
+            wisdom2  = NAKSHATRA_WISDOM.get(nak2_num)
+            if wisdom2:
+                st.markdown("---")
+                st.markdown(f"**After transition — {data['nakshatra2_name']}**")
+                st.markdown(f"**Theme:** {wisdom2['theme']}")
+                for line in wisdom2["advice"]:
+                    st.markdown(f"- {line}")

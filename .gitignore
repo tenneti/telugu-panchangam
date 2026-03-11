@@ -5,6 +5,9 @@
 # Dev/debug scripts
 check_amrita.py
 
+# Local docs (PRDs, notes)
+docs/
+
 # All CSV exports (not needed by app)
 *.csv
 
