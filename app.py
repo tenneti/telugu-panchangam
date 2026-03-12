@@ -194,6 +194,45 @@ def verdict_html(name: str, verdict: str, tara_index: int = None, tara_name: str
 
 
 # -------------------------------------------------------------------
+# Tithi nature reference (from thithi-reference.md)
+# Key = tithi position within paksha (1-15); 30 = Amavasya.
+# Tithis 16-29 share the same nature as 1-14 respectively.
+# -------------------------------------------------------------------
+
+TITHI_NATURE = {
+    1:  {"nature": "Initiation & new beginnings",       "good": ["Starting routines, setting intentions", "Reorganizing personal life or workspace"],     "avoid": ["Large financial commitments", "Major travel decisions"],          "shukla": "Fresh beginnings and enthusiasm.",  "krishna": "Reflection, correcting past mistakes."},
+    2:  {"nature": "Balance & cooperation",              "good": ["Partnerships, agreements, travel",      "Building trust between individuals"],           "avoid": ["Aggressive negotiations",           "Conflict-driven decisions"],        "shukla": "Supports new collaborations.",      "krishna": "Repairing relationships."},
+    3:  {"nature": "Creativity & expansion",             "good": ["Artistic work, writing, learning",      "Skill development"],                            "avoid": ["Overconfidence in decisions",        "High-risk financial speculation"],  "shukla": "Excellent for creative pursuits.",  "krishna": "Improving existing skills."},
+    4:  {"nature": "Overcoming obstacles",               "good": ["Problem-solving, complex analysis",     "Addressing pending difficulties"],              "avoid": ["Travel",                            "Starting new ventures or jobs"],    "shukla": "Good for confronting challenges.",  "krishna": "Removing internal obstacles."},
+    5:  {"nature": "Learning & healing",                 "good": ["Education, spiritual study",            "Health-related decisions"],                     "avoid": ["Confrontational discussions",        "Legal disputes"],                  "shukla": "Supports intellectual growth.",     "krishna": "Healing and introspection."},
+    6:  {"nature": "Discipline & structured progress",  "good": ["Organizing projects, routines",         "Physical health practices"],                    "avoid": ["Impulsive decisions",               "Emotional arguments"],             "shukla": "Building new systems.",             "krishna": "Strengthening existing habits."},
+    7:  {"nature": "Vitality & movement",                "good": ["Travel, career decisions",              "Initiating public activities"],                 "avoid": ["Overworking yourself",              "Risky financial decisions"],        "shukla": "Strong energy for progress.",       "krishna": "Reviewing and adjusting direction."},
+    8:  {"nature": "Intensity & transformation",         "good": ["Research, deep analysis",               "Confronting hidden issues"],                    "avoid": ["Beginning major ventures",          "Financial commitments"],           "shukla": "Strong transformative energy.",     "krishna": "Psychologically introspective."},
+    9:  {"nature": "Courage & action",                   "good": ["Leadership, competitive environments",  "Overcoming fear"],                              "avoid": ["Peaceful negotiations",             "Sensitive relationship talks"],     "shukla": "Supports decisive action.",         "krishna": "Internal courage, self-discipline."},
+    10: {"nature": "Success & achievement",              "good": ["Launching initiatives, career moves",   "Public announcements"],                         "avoid": ["Complacency",                       "Ignoring contract details"],        "shukla": "Excellent for visible achievements.", "krishna": "Consolidating success."},
+    11: {"nature": "Purification & spiritual clarity",  "good": ["Fasting, meditation, reflection",       "Reducing mental distractions"],                 "avoid": ["Heavy material pursuits",           "Indulgence"],                      "shukla": "Spiritual upliftment and clarity.",  "krishna": "Deep introspection and discipline."},
+    12: {"nature": "Recovery & restoration",             "good": ["Resuming normal activities",            "Family gatherings, balanced work"],             "avoid": ["Extreme actions or decisions"],                                       "shukla": "Supports social harmony.",          "krishna": "Gentle transitions."},
+    13: {"nature": "Refinement & improvement",           "good": ["Correcting mistakes, negotiations",     "Preparing for important events"],               "avoid": ["Impulsive emotional reactions"],                                      "shukla": "Preparing for success.",            "krishna": "Introspective improvement."},
+    14: {"nature": "Intense transformation",             "good": ["Spiritual practices",                   "Completing unfinished work"],                   "avoid": ["Major beginnings, business launches", "Travel"],                     "shukla": "Energy building toward completion.", "krishna": "Strong spiritual transformation."},
+    15: {"nature": "Fullness & illumination",            "good": ["Celebrations, community gatherings",    "Creative expression, teaching"],                "avoid": ["Emotionally sensitive decisions",   "Impulsive reactions"],             "shukla": "Energy is emotionally heightened.",  "krishna": None},
+    30: {"nature": "Closure & renewal",                  "good": ["Meditation, honoring ancestors",        "Releasing old patterns, introspection"],        "avoid": ["Starting new jobs",                 "Financial commitments, long journeys"], "shukla": None, "krishna": "Energy is inward and quiet."},
+}
+
+
+def tithi_nature_key(tithi_num):
+    """Map DB tithi number (1-30) to TITHI_NATURE key."""
+    if tithi_num is None:
+        return None
+    if tithi_num == 30:
+        return 30
+    if tithi_num == 15:
+        return 15
+    if tithi_num > 15:
+        return tithi_num - 15
+    return tithi_num
+
+
+# -------------------------------------------------------------------
 # Nakshatra wisdom (Feature 4 data)
 # -------------------------------------------------------------------
 
@@ -225,6 +264,22 @@ NAKSHATRA_WISDOM = {
     25: {"theme": "Intensity & Transformation",         "advice": ["Good for spiritual work and inner transformation", "Avoid anger, impulsive speech, and conflict", "Channel intensity constructively — today's fire can forge or destroy"]},
     26: {"theme": "Wisdom & Depth",                     "advice": ["Excellent for teaching, meditation, and long-term planning", "Favorable for philosophical reflection and writing", "Go slow and deep — Uttara Bhadrapada rewards patience"]},
     27: {"theme": "Completion & Compassion",            "advice": ["Good for endings, new beginnings, and acts of charity", "Favorable for letting go gracefully and starting fresh", "Revati closes one cycle and opens another — honor both"]},
+}
+
+# -------------------------------------------------------------------
+# Tara descriptions (for 7-day forecast detail lines)
+# -------------------------------------------------------------------
+
+TARA_INFO = {
+    1: {"desc1": "Birth-star energy — stay alert and present.",   "desc2": "Good for self-awareness, less ideal for risks."},
+    2: {"desc1": "Wealth tara — excellent for gains and growth.", "desc2": "Favorable for financial and material matters."},
+    3: {"desc1": "Danger tara — avoid risky actions today.",      "desc2": "Delays and obstacles are likely; plan conservatively."},
+    4: {"desc1": "Prosperity tara — supports important work.",    "desc2": "Good for investments, key decisions, and planning."},
+    5: {"desc1": "Obstruction tara — patience is advised.",       "desc2": "Focus on inner work; avoid forcing outcomes."},
+    6: {"desc1": "Achievement tara — sustained effort pays off.", "desc2": "Good for completing projects and pushing forward."},
+    7: {"desc1": "Inauspicious — delay major decisions today.",   "desc2": "Rest, reflect, and avoid irreversible commitments."},
+    8: {"desc1": "Friendly star — good for collaborations.",      "desc2": "Partnerships and teamwork are especially favored."},
+    9: {"desc1": "Best-friend star — highly auspicious day.",     "desc2": "Excellent for all important and auspicious work."},
 }
 
 # -------------------------------------------------------------------
@@ -310,15 +365,19 @@ st.set_page_config(page_title="Tara Veda", page_icon="🌅", layout="wide")
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet">
 <style>
+  .stApp { background-color: #fdf8f2 !important; }
   .block-container { padding-top: 1rem !important; padding-bottom: 0 !important; }
-  h3 { margin-top: 0.4rem !important; margin-bottom: 0.2rem !important; font-size: 1rem !important; }
-  hr { margin: 0.4rem 0 !important; }
+  h3 { margin-top: 0.4rem !important; margin-bottom: 0.2rem !important;
+       font-size: 1rem !important; color: #5a2d00 !important; }
+  hr { margin: 0.4rem 0 !important; border-color: #e8d5b5 !important; }
   [data-testid="stSidebar"] { display: none; }
   [data-testid="stVerticalBlockBorderWrapper"] {
-      border: 1.5px solid #d0d0d0 !important;
+      border: 1.5px solid #c8903a !important;
       border-radius: 10px !important;
       padding: 0.5rem !important;
+      background-color: #fffdf8 !important;
   }
+  .stCaption p { color: #8b6020 !important; }
   .text-logo {
       font-family: 'Cinzel', serif;
       font-size: 2.6rem;
@@ -326,10 +385,12 @@ st.markdown("""
       letter-spacing: 0.12em;
       text-align: center;
       padding: 0.6rem 0 0.4rem 0;
-      color: #2c2c2c;
+      color: #8b2500;
+      text-shadow: 0 1px 2px rgba(180,80,0,0.12);
   }
   .controls-bar {
-      background-color: #f0f0f0;
+      background-color: #f5e8d0;
+      border: 1px solid #ddb87a;
       border-radius: 8px;
       padding: 0.6rem 1rem;
       margin-bottom: 0.8rem;
@@ -374,12 +435,14 @@ st.markdown('</div>', unsafe_allow_html=True)
 data = load_data(city_name, query_date, birth_nak)
 
 # ===================================================================
-# ROW 1 — TODAY (left) + 7-DAY FORECAST (right)
+# TWO OUTER COLUMNS — left: Today + Planner | right: Forecast + Wisdom
 # ===================================================================
 
-col_today, col_forecast = st.columns(2)
+col_left, col_right = st.columns(2)
 
-with col_today:
+# ----- LEFT COLUMN -------------------------------------------------
+with col_left:
+
     with st.container(border=True):
         st.subheader(f"{data['weekday_name']}, {query_date.strftime('%d %B %Y')} — {city_name}")
         vedic_line = get_vedic_line(query_date, city_name, data.get("tithi_num"))
@@ -434,34 +497,6 @@ with col_today:
             st.markdown("---")
             st.markdown("\n".join(f"- {note}" for note in advice))
 
-with col_forecast:
-    with st.container(border=True):
-        st.subheader("7-Day Forecast")
-        st.caption(f"Tarabala for {NAKSHATRA_NAMES[birth_nak]}")
-
-        week = load_week_data(city_name, query_date, birth_nak, days=7)
-        for d, row in week:
-            score = get_day_score(row.get("tara_verdict"))
-            label, icon = score_label(score)
-            nak = row.get("nakshatra_name", "—")
-            tithi = row.get("tithi_name", "—")
-            is_today = (d == query_date)
-            day_str = f"**{'Today' if is_today else d.strftime('%a %d %b')}**"
-            st.markdown(
-                f"{icon} {day_str} &nbsp; {label}<br>"
-                f"<span style='color:#888;font-size:0.82rem;margin-left:1.4rem'>{nak} · {tithi}</span>",
-                unsafe_allow_html=True,
-            )
-        st.markdown("---")
-        st.caption("🟢 Excellent &nbsp; 🟡 Good &nbsp; 🟠 Neutral &nbsp; 🔴 Avoid")
-
-# ===================================================================
-# ROW 2 — ACTIVITY PLANNER (left) + DAILY WISDOM (right)
-# ===================================================================
-
-col_planner, col_wisdom = st.columns(2)
-
-with col_planner:
     with st.container(border=True):
         st.subheader("Activity Planner")
         st.caption("Avoids Rahu Kalam, Durmuhurtham, Varjyam")
@@ -495,7 +530,65 @@ with col_planner:
         if data.get("amrita_ghadiya_start_dt"):
             st.markdown(f"🟢 **Amrita:** {time_range_aware(data.get('amrita_ghadiya_start_dt'), data.get('amrita_ghadiya_end_dt'), query_date)}")
 
-with col_wisdom:
+# ----- RIGHT COLUMN ------------------------------------------------
+with col_right:
+
+    with st.container(border=True):
+        st.subheader("7-Day Forecast")
+
+        week = load_week_data(city_name, query_date, birth_nak, days=7)
+
+        fc_tara, fc_tithi = st.columns(2)
+
+        with fc_tara:
+            st.caption(f"Tarabala — {NAKSHATRA_NAMES[birth_nak]}")
+            for d, row in week:
+                score = get_day_score(row.get("tara_verdict"))
+                label, icon = score_label(score)
+                nak = row.get("nakshatra_name", "—")
+                tara_idx = row.get("tara_index")
+                tara_nm  = row.get("tara_name", "")
+                tinfo    = TARA_INFO.get(tara_idx, {})
+                is_today = (d == query_date)
+                day_label = "Today" if is_today else d.strftime("%a %d %b")
+                tara_line = f"Tara {tara_idx} · {tara_nm}" if tara_idx and tara_nm else ""
+                st.markdown(
+                    f"{icon} **{day_label} · {nak}** — {label}<br>"
+                    + (f"<span style='font-size:0.78rem;color:#555;margin-left:1.2rem'>{tara_line}</span><br>" if tara_line else "")
+                    + (f"<span style='font-size:0.78rem;color:#555;margin-left:1.2rem'>{tinfo.get('desc1','')}</span><br>" if tinfo.get('desc1') else "")
+                    + (f"<span style='font-size:0.78rem;color:#888;margin-left:1.2rem'>{tinfo.get('desc2','')}</span>" if tinfo.get('desc2') else ""),
+                    unsafe_allow_html=True,
+                )
+                st.markdown("<div style='margin-bottom:0.4rem'></div>", unsafe_allow_html=True)
+            st.markdown("---")
+            st.caption("🟢 Excellent &nbsp; 🟡 Good &nbsp; 🟠 Neutral &nbsp; 🔴 Avoid")
+
+        with fc_tithi:
+            st.caption("Tithi Nature")
+            for d, row in week:
+                tnum = row.get("tithi_num")
+                tname = row.get("tithi_name", "—")
+                is_today = (d == query_date)
+                day_label = "Today" if is_today else d.strftime("%a %d")
+                paksha = "Shukla" if tnum and tnum <= 15 else "Krishna"
+                key = tithi_nature_key(tnum)
+                info = TITHI_NATURE.get(key)
+                if info:
+                    paksha_note = info.get(paksha.lower(), "") or ""
+                    good_first = info["good"][0] if info["good"] else ""
+                    avoid_first = info["avoid"][0] if info["avoid"] else ""
+                    st.markdown(
+                        f"**{day_label}** — {tname}<br>"
+                        f"<span style='font-size:0.8rem;color:#555'>{info['nature']}</span><br>"
+                        f"<span style='font-size:0.78rem;color:#2e7d32'>✔ {good_first}</span><br>"
+                        f"<span style='font-size:0.78rem;color:#c62828'>✘ {avoid_first}</span>"
+                        + (f"<br><span style='font-size:0.76rem;color:#888;font-style:italic'>{paksha_note}</span>" if paksha_note else ""),
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(f"**{day_label}** — {tname}")
+                st.markdown("<div style='margin-bottom:0.4rem'></div>", unsafe_allow_html=True)
+
     with st.container(border=True):
         nak_num  = data.get("nakshatra_num")
         nak_name = data.get("nakshatra_name", "—")
@@ -522,3 +615,10 @@ with col_wisdom:
                 st.markdown(f"**Theme:** {wisdom2['theme']}")
                 for line in wisdom2["advice"]:
                     st.markdown(f"- {line}")
+
+st.markdown("""
+<hr style='border-color:#e8d5b5;margin-top:1.5rem;margin-bottom:0.6rem'>
+<div style='text-align:center;font-size:0.8rem;color:#8b6020;padding-bottom:1rem'>
+    &copy; 2026 Bhavani Technologies. All rights reserved.
+</div>
+""", unsafe_allow_html=True)
