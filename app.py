@@ -521,9 +521,10 @@ with col_left:
 
         st.markdown("**Avoid:**")
         for label, sk, ek in [
-            ("Rahu Kalam",   "rahu_start_dt",         "rahu_end_dt"),
-            ("Durmuhurtham", "durmuhurtham1_start_dt", "durmuhurtham1_end_dt"),
-            ("Varjyam",      "varjyam1_start_dt",      "varjyam1_end_dt"),
+            ("Rahu Kalam",    "rahu_start_dt",          "rahu_end_dt"),
+            ("Durmuhurtham",  "durmuhurtham1_start_dt",  "durmuhurtham1_end_dt"),
+            ("Durmuhurtham",  "durmuhurtham2_start_dt",  "durmuhurtham2_end_dt"),
+            ("Varjyam",       "varjyam1_start_dt",       "varjyam1_end_dt"),
         ]:
             if data.get(sk):
                 st.markdown(f"🔴 **{label}:** {time_range(data.get(sk), data.get(ek))}")

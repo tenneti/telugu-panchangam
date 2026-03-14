@@ -385,13 +385,21 @@ def compute_one_day(d: date, place: AppPlace) -> Dict[str, Any]:
     yamaganda_start_dt, yamaganda_end_dt = normalize_time_window(d, yamaganda[0], yamaganda[1]) if yamaganda else (None, None)
     gulika_start_dt, gulika_end_dt = normalize_time_window(d, gulika[0], gulika[1]) if gulika else (None, None)
 
-    # Durmuhurtham can return 2 or 4 values
+    # Durmuhurtham: PyJHora may return a flat list [s1, e1, s2, e2]
+    # OR a nested list of tuples [(s1, e1), (s2, e2)] depending on version.
     dur1_start = dur1_end = dur2_start = dur2_end = None
     if durmuhurtham:
-        if len(durmuhurtham) >= 2:
-            dur1_start, dur1_end = normalize_time_window(d, durmuhurtham[0], durmuhurtham[1])
-        if len(durmuhurtham) >= 4:
-            dur2_start, dur2_end = normalize_time_window(d, durmuhurtham[2], durmuhurtham[3])
+        if isinstance(durmuhurtham[0], (list, tuple)):
+            # Nested format: [(s1, e1), (s2, e2)]
+            dur1_start, dur1_end = normalize_time_window(d, durmuhurtham[0][0], durmuhurtham[0][1])
+            if len(durmuhurtham) >= 2:
+                dur2_start, dur2_end = normalize_time_window(d, durmuhurtham[1][0], durmuhurtham[1][1])
+        else:
+            # Flat format: [s1, e1] or [s1, e1, s2, e2]
+            if len(durmuhurtham) >= 2:
+                dur1_start, dur1_end = normalize_time_window(d, durmuhurtham[0], durmuhurtham[1])
+            if len(durmuhurtham) >= 4:
+                dur2_start, dur2_end = normalize_time_window(d, durmuhurtham[2], durmuhurtham[3])
 
     # Abhijit
     abhijit_start_dt, abhijit_end_dt = normalize_time_window(d, abhijit[0], abhijit[1]) if abhijit else (None, None)
