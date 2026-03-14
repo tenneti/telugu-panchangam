@@ -527,7 +527,7 @@ with col_left:
             ("Varjyam",       "varjyam1_start_dt",       "varjyam1_end_dt"),
         ]:
             if data.get(sk):
-                st.markdown(f"🔴 **{label}:** {time_range(data.get(sk), data.get(ek))}")
+                st.markdown(f"🔴 **{label}:** {time_range_aware(data.get(sk), data.get(ek), query_date)}")
         if data.get("amrita_ghadiya_start_dt"):
             st.markdown(f"🟢 **Amrita:** {time_range_aware(data.get('amrita_ghadiya_start_dt'), data.get('amrita_ghadiya_end_dt'), query_date)}")
 

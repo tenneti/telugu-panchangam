@@ -112,6 +112,25 @@ TARA_CATEGORIES = {
     9: ("Parama Mitra", "Good"),
 }
 
+# Durmuhurtham daytime muhurta slots (1-indexed from sunrise) per weekday.
+# PyJHora's drik.durmuhurtam has a systematic weekday-to-slot mapping error,
+# so we compute from this table instead.
+# Source: OurSubhakaryam.com / Telugu panchangam tradition.
+# Slots derived from published offsets (hrs:min after sunrise) ÷ 48 min + 1.
+# weekday: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+DURMUHURTAM_SLOTS: Dict[int, List[int]] = {
+    0: [14],       # Sunday:    10h 24m after sunrise
+    1: [9, 12],    # Monday:    6h 24m and 8h 48m (two windows)
+    2: [4],        # Tuesday:   2h 24m daytime (+ night window below)
+    3: [8],        # Wednesday: 5h 36m after sunrise
+    4: [6, 12],    # Thursday:  4h 0m and 8h 48m (two windows)
+    5: [4, 12],    # Friday:    2h 24m and 8h 48m (two windows)
+    6: [1, 2],     # Saturday:  starts at sunrise, 96 min (2 consecutive muhurtas)
+}
+
+# Tuesday also has a night durmuhurtam: 5h 36m after sunset (stored in dur2)
+_TUESDAY_NIGHT_OFFSET_HRS: float = 5 + 36 / 60
+
 # -------------------------------------------------------------------
 # DATA CLASSES
 # -------------------------------------------------------------------
@@ -346,7 +365,6 @@ def compute_one_day(d: date, place: AppPlace) -> Dict[str, Any]:
     yamaganda = safe_get(drik.trikalam, jd, pj_place, "yamagandam", default=None)
     gulika = safe_get(drik.trikalam, jd, pj_place, "gulikai", default=None)
 
-    durmuhurtham = safe_get(drik.durmuhurtam, jd, pj_place, default=None)
     abhijit = safe_get(drik.abhijit_muhurta, jd, pj_place, default=None)
 
     # Sunrise, sunset, moonrise, moonset
@@ -385,21 +403,27 @@ def compute_one_day(d: date, place: AppPlace) -> Dict[str, Any]:
     yamaganda_start_dt, yamaganda_end_dt = normalize_time_window(d, yamaganda[0], yamaganda[1]) if yamaganda else (None, None)
     gulika_start_dt, gulika_end_dt = normalize_time_window(d, gulika[0], gulika[1]) if gulika else (None, None)
 
-    # Durmuhurtham: PyJHora may return a flat list [s1, e1, s2, e2]
-    # OR a nested list of tuples [(s1, e1), (s2, e2)] depending on version.
+    # Durmuhurtham: computed from traditional muhurta slots.
+    # drik.durmuhurtam has a systematic weekday-to-slot mapping bug in PyJHora.
     dur1_start = dur1_end = dur2_start = dur2_end = None
-    if durmuhurtham:
-        if isinstance(durmuhurtham[0], (list, tuple)):
-            # Nested format: [(s1, e1), (s2, e2)]
-            dur1_start, dur1_end = normalize_time_window(d, durmuhurtham[0][0], durmuhurtham[0][1])
-            if len(durmuhurtham) >= 2:
-                dur2_start, dur2_end = normalize_time_window(d, durmuhurtham[1][0], durmuhurtham[1][1])
-        else:
-            # Flat format: [s1, e1] or [s1, e1, s2, e2]
-            if len(durmuhurtham) >= 2:
-                dur1_start, dur1_end = normalize_time_window(d, durmuhurtham[0], durmuhurtham[1])
-            if len(durmuhurtham) >= 4:
-                dur2_start, dur2_end = normalize_time_window(d, durmuhurtham[2], durmuhurtham[3])
+    if weekday_num is not None and sunrise and sunset:
+        sunrise_hrs = sunrise[0]
+        day_hrs = sunset[0] - sunrise_hrs
+        muhurta_hrs = day_hrs / 15
+        slots = DURMUHURTAM_SLOTS.get(weekday_num, [])
+        if len(slots) >= 1:
+            s = sunrise_hrs + (slots[0] - 1) * muhurta_hrs
+            dur1_start = local_hours_to_dt(d, s)
+            dur1_end   = local_hours_to_dt(d, s + muhurta_hrs)
+        if len(slots) >= 2:
+            s = sunrise_hrs + (slots[1] - 1) * muhurta_hrs
+            dur2_start = local_hours_to_dt(d, s)
+            dur2_end   = local_hours_to_dt(d, s + muhurta_hrs)
+        # Tuesday night window: 5h 36m after sunset (may fall past midnight)
+        if weekday_num == 2:
+            s = sunset[0] + _TUESDAY_NIGHT_OFFSET_HRS
+            dur2_start = local_hours_to_dt(d, s)
+            dur2_end   = local_hours_to_dt(d, s + muhurta_hrs)
 
     # Abhijit
     abhijit_start_dt, abhijit_end_dt = normalize_time_window(d, abhijit[0], abhijit[1]) if abhijit else (None, None)
