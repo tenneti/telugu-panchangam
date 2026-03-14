@@ -366,7 +366,7 @@ st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet">
 <style>
   .stApp { background-color: #fdf8f2 !important; }
-  .block-container { padding-top: 1rem !important; padding-bottom: 0 !important; }
+  .block-container { padding-top: 2.5rem !important; padding-bottom: 0 !important; }
   h3 { margin-top: 0.4rem !important; margin-bottom: 0.2rem !important;
        font-size: 1rem !important; color: #5a2d00 !important; }
   hr { margin: 0.4rem 0 !important; border-color: #e8d5b5 !important; }
@@ -384,7 +384,7 @@ st.markdown("""
       font-weight: 600;
       letter-spacing: 0.12em;
       text-align: center;
-      padding: 0.6rem 0 0.4rem 0;
+      padding: 1.2rem 0 0.4rem 0;
       color: #8b2500;
       text-shadow: 0 1px 2px rgba(180,80,0,0.12);
   }
