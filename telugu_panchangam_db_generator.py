@@ -124,7 +124,7 @@ DURMUHURTAM_SLOTS: Dict[int, List[int]] = {
     2: [4],        # Tuesday:   2h 24m daytime (+ night window below)
     3: [8],        # Wednesday: 5h 36m after sunrise
     4: [6, 12],    # Thursday:  4h 0m and 8h 48m (two windows)
-    5: [4, 12],    # Friday:    2h 24m and 8h 48m (two windows)
+    5: [4, 9],     # Friday:    2h 24m and 6h 24m (two windows)
     6: [1, 2],     # Saturday:  starts at sunrise, 96 min (2 consecutive muhurtas)
 }
 

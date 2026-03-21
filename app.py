@@ -69,11 +69,17 @@ TITHI_SHORT = {
 }
 
 
-def get_samvatsara(d: date) -> str:
+def get_samvatsara(d: date, masa_num: int = None) -> str:
     """Returns the 60-year cycle samvatsara name for the given date."""
-    # Ugadi (Telugu new year) falls roughly in March/April.
-    # Saka year increments at Ugadi; use month >= 4 as a safe proxy.
-    saka_year = (d.year - 78) if d.month >= 4 else (d.year - 79)
+    # Saka year increments at Ugadi (Chaitra Shukla Pratipada).
+    # Use masa_num from PyJHora when available: masa 1 = Chaitra = new year.
+    # Masa 0 is mapped to 12 (Phalguna) by the caller, so masa_num != 12 → new year.
+    # Fall back to month >= 4 only when masa is unknown.
+    if masa_num is not None:
+        in_new_year = (masa_num != 12)
+    else:
+        in_new_year = (d.month >= 4)
+    saka_year = (d.year - 78) if in_new_year else (d.year - 79)
     return SAMVATSARA_NAMES[(saka_year + 11) % 60]
 
 
@@ -98,7 +104,7 @@ def get_vedic_line(d: date, city_name: str, tithi_num: int) -> str:
     except Exception:
         pass
 
-    samvat = get_samvatsara(d)
+    samvat = get_samvatsara(d, masa_num)
     ayana  = get_ayana(d)
     ritu   = RITU_NAMES.get(masa_num, "—") if masa_num else "—"
     masa   = MASA_NAMES.get(masa_num, "—") if masa_num else "—"
