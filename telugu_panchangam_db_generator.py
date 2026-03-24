@@ -419,11 +419,12 @@ def compute_one_day(d: date, place: AppPlace) -> Dict[str, Any]:
             s = sunrise_hrs + (slots[1] - 1) * muhurta_hrs
             dur2_start = local_hours_to_dt(d, s)
             dur2_end   = local_hours_to_dt(d, s + muhurta_hrs)
-        # Tuesday night window: 5h 36m after sunset (may fall past midnight)
+        # Tuesday night window: ends 5h 36m after sunset (may fall past midnight)
+        # The traditional offset marks the END of the slot; start is one muhurta earlier.
         if weekday_num == 2:
-            s = sunset[0] + _TUESDAY_NIGHT_OFFSET_HRS
-            dur2_start = local_hours_to_dt(d, s)
-            dur2_end   = local_hours_to_dt(d, s + muhurta_hrs)
+            s_end = sunset[0] + _TUESDAY_NIGHT_OFFSET_HRS
+            dur2_end   = local_hours_to_dt(d, s_end)
+            dur2_start = local_hours_to_dt(d, s_end - muhurta_hrs)
 
     # Abhijit
     abhijit_start_dt, abhijit_end_dt = normalize_time_window(d, abhijit[0], abhijit[1]) if abhijit else (None, None)
