@@ -21,7 +21,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install PyJHora pyswisseph geocoder timezonefinder geopy
+          pip install -r requirements.txt
+
 
       - name: Send daily email
         env:
