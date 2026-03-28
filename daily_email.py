@@ -28,6 +28,13 @@ from telugu_panchangam_db_generator import (
     tara_bala,
     AYANAMSA_MODE,
 )
+from app import (
+    get_samvatsara,
+    get_ayana,
+    RITU_NAMES,
+    MASA_NAMES,
+    TITHI_SHORT,
+)
 
 # -------------------------------------------------------------------
 # CONFIG  (edit these or override via environment variables)
@@ -108,6 +115,36 @@ def section(title: str, rows_html: str) -> str:
 # Build data
 # -------------------------------------------------------------------
 
+def get_vedic_line(d: date, tithi_num: int) -> str:
+    """Builds the traditional sankalpa header line."""
+    pj_place = CITY.to_pyjhora_place()
+    jd = utils.julian_day_number((d.year, d.month, d.day), (12, 0, 0))
+
+    masa_num = None
+    try:
+        result = drik.lunar_month(jd, pj_place)
+        idx = result[0] if isinstance(result, (list, tuple)) else int(result)
+        masa_num = 12 if idx == 0 else idx
+    except Exception:
+        pass
+
+    samvat = get_samvatsara(d, masa_num)
+    ayana  = get_ayana(d)
+    ritu   = RITU_NAMES.get(masa_num, "—") if masa_num else "—"
+    masa   = MASA_NAMES.get(masa_num, "—") if masa_num else "—"
+    paksha = "Shukla" if tithi_num and tithi_num <= 15 else "Krishna"
+    tithi  = TITHI_SHORT.get(tithi_num, "—") if tithi_num else "—"
+
+    return (
+        f"{samvat} naama samvatsarae"
+        f"  »  {ayana}e"
+        f"  »  {ritu} rutou"
+        f"  »  {masa} Maasae"
+        f"  »  {paksha} Pakshae"
+        f"  »  {tithi} Thithou"
+    )
+
+
 def get_today_data(d: date) -> dict:
     data = compute_one_day(d, CITY)
 
@@ -180,18 +217,23 @@ def build_html(d: date, data: dict) -> str:
         + row("Moonset",  fmt(data.get("moonset_dt")))
     )
 
+    dur_cell = time_range(data.get("durmuhurtham1_start_dt"), data.get("durmuhurtham1_end_dt"))
+    if data.get("durmuhurtham2_start_dt"):
+        dur_cell += f"<br>{time_range(data.get('durmuhurtham2_start_dt'), data.get('durmuhurtham2_end_dt'))}"
+
     inauspicious_rows = (
         row("Rahu Kalam",   time_range(data.get("rahu_start_dt"),      data.get("rahu_end_dt")))
         + row("Yamaganda",    time_range(data.get("yamaganda_start_dt"), data.get("yamaganda_end_dt")))
         + row("Gulika Kalam", time_range(data.get("gulika_start_dt"),    data.get("gulika_end_dt")))
-        + row("Durmuhurtham", time_range(data.get("durmuhurtham1_start_dt"), data.get("durmuhurtham1_end_dt")))
+        + row("Durmuhurtham", dur_cell)
     )
 
     auspicious_rows = (
-        row("Abhijit Muhurta", time_range(data.get("abhijit_start_dt"),        data.get("abhijit_end_dt")))
-        + row("Amrita Ghadiyalu", time_range_aware(data.get("amrita_ghadiya_start_dt"), data.get("amrita_ghadiya_end_dt"), d))
-        + row("Varjyam",          time_range_aware(data.get("varjyam1_start_dt"),       data.get("varjyam1_end_dt"), d))
+        row("Amrita Ghadiyalu", time_range_aware(data.get("amrita_ghadiya_start_dt"), data.get("amrita_ghadiya_end_dt"), d))
+        + row("Varjyam",        time_range_aware(data.get("varjyam1_start_dt"),       data.get("varjyam1_end_dt"), d))
     )
+
+    vedic_line = get_vedic_line(d, data.get("tithi_num"))
 
     html = f"""
     <html><body style='font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#222'>
@@ -200,6 +242,7 @@ def build_html(d: date, data: dict) -> str:
     <p style='margin:0;color:#555'>
         {data.get('weekday_name','')}, {d.strftime('%d %B %Y')} &nbsp;|&nbsp; {CITY.name}
     </p>
+    <p style='margin:6px 0 0;font-size:0.82rem;color:#666;font-style:italic'>{vedic_line}</p>
 
     {section("Sun & Moon", sun_moon_rows)}
     {section("Pancha Anga", pancha_rows)}
