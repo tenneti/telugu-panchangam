@@ -10,8 +10,6 @@ from datetime import date
 from pathlib import Path
 
 import streamlit as st
-from jhora.panchanga import drik
-from jhora import utils
 
 from telugu_panchangam_db_generator import (
     CITIES,
@@ -92,12 +90,13 @@ def get_ayana(d: date) -> str:
 def get_vedic_line(d: date, city_name: str, tithi_num: int) -> str:
     """Builds the traditional sankalpa header line."""
     city = next(c for c in CITIES if c["name"] == city_name)
-    place = drik.Place(city["name"], city["latitude"], city["longitude"], city["timezone"])
-    jd = utils.julian_day_number((d.year, d.month, d.day), (12, 0, 0))
 
-    # Masa via PyJHora
     masa_num = None
     try:
+        from jhora.panchanga import drik
+        from jhora import utils
+        place = drik.Place(city["name"], city["latitude"], city["longitude"], city["timezone"])
+        jd = utils.julian_day_number((d.year, d.month, d.day), (12, 0, 0))
         result = drik.lunar_month(jd, place)
         idx = result[0] if isinstance(result, (list, tuple)) else int(result)
         masa_num = 12 if idx == 0 else idx   # 0 = Phalguna (12th month)

@@ -37,9 +37,12 @@ from typing import Any, Dict, Optional, Tuple, List
 
 import pandas as pd
 
-# PyJHora imports
-from jhora import utils, const
-from jhora.panchanga import drik
+# PyJHora imports — only needed for DB generation, not for app serving
+try:
+    from jhora import utils, const
+    from jhora.panchanga import drik
+except ImportError:
+    utils = drik = const = None  # type: ignore[assignment]
 
 # -------------------------------------------------------------------
 # CONFIG
