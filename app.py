@@ -5,8 +5,9 @@ Run with:
     streamlit run app.py
 """
 
+import math
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import streamlit as st
@@ -87,6 +88,46 @@ def get_ayana(d: date) -> str:
     return "Uttarayana" if 14 <= doy <= 197 else "Dakshinayana"
 
 
+def _approx_masa_num(d: date, tithi_num: int):
+    """
+    Approximate Amavasyant masa (1-12) using the sun's sidereal longitude
+    at the estimated previous new moon. Accurate to ±1 masa near the
+    new moon boundary; correct for the vast majority of each month.
+    """
+    if not tithi_num:
+        return None
+    # Each tithi ≈ 29.53059/30 solar days; tithi 1 starts right after new moon
+    days_since_nm = (tithi_num - 1) * (29.53059 / 30.0)
+    nm_date = d - timedelta(days=round(days_since_nm))
+
+    # Julian Day for nm_date at midnight (Meeus formula)
+    y, m, day = nm_date.year, nm_date.month, nm_date.day
+    if m <= 2:
+        y -= 1
+        m += 12
+    A = y // 100
+    B = 2 - A + A // 4
+    jd = int(365.25 * (y + 4716)) + int(30.6001 * (m + 1)) + day + B - 1524.5
+
+    # Approximate tropical sun longitude (Meeus Ch.25 low-precision)
+    T = (jd - 2451545.0) / 36525.0
+    L0 = (280.46646 + 36000.76983 * T) % 360
+    M  = math.radians((357.52911 + 35999.05029 * T) % 360)
+    C  = ((1.914602 - 0.004817 * T) * math.sin(M)
+          + 0.019993 * math.sin(2 * M)
+          + 0.000289 * math.sin(3 * M))
+    sun_tropical = (L0 + C) % 360
+
+    # Lahiri ayanamsa ≈ 23.85° at J2000, precessing ~50.3" per year
+    ayanamsa = 23.85 + (nm_date.year - 2000) * (50.3 / 3600.0)
+    sun_sidereal = (sun_tropical - ayanamsa) % 360
+
+    # Amavasyant: Chaitra new moon falls with sun in Meena (rashi 11), not Mesha.
+    # Meena→Chaitra(1), Mesha→Vaishakha(2), Vrishabha→Jyeshtha(3), …
+    rashi = int(sun_sidereal / 30.0)
+    return ((rashi + 2) % 12) or 12
+
+
 def get_vedic_line(d: date, city_name: str, tithi_num: int) -> str:
     """Builds the traditional sankalpa header line."""
     city = next(c for c in CITIES if c["name"] == city_name)
@@ -101,7 +142,7 @@ def get_vedic_line(d: date, city_name: str, tithi_num: int) -> str:
         idx = result[0] if isinstance(result, (list, tuple)) else int(result)
         masa_num = 12 if idx == 0 else idx   # 0 = Phalguna (12th month)
     except Exception:
-        pass
+        masa_num = _approx_masa_num(d, tithi_num)
 
     samvat = get_samvatsara(d, masa_num)
     ayana  = get_ayana(d)
