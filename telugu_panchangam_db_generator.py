@@ -49,9 +49,10 @@ except ImportError:
 # -------------------------------------------------------------------
 
 CITIES = [
-    {"name": "Hyderabad",      "latitude": 17.3850, "longitude": 78.4867, "timezone": 5.5},
-    {"name": "Visakhapatnam",  "latitude": 17.6868, "longitude": 83.2185, "timezone": 5.5},
-    {"name": "Bangalore",      "latitude": 12.9716, "longitude": 77.5946, "timezone": 5.5},
+    {"name": "Hyderabad",      "latitude": 17.3850, "longitude": 78.4867,  "timezone":  5.5},
+    {"name": "Visakhapatnam",  "latitude": 17.6868, "longitude": 83.2185,  "timezone":  5.5},
+    {"name": "Bangalore",      "latitude": 12.9716, "longitude": 77.5946,  "timezone":  5.5},
+    {"name": "Dallas",         "latitude": 32.7767, "longitude": -96.7970, "timezone": -6.0},
 ]
 
 START_YEAR = 1952
